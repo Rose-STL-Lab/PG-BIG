@@ -55,15 +55,10 @@ You can download/create the datasets following the instructions below.
      ```
      unzip FullBodyModel-4.0.zip -d FullBodyModel-4.0
      ```
-   - Run the retargeting algorithm to save skeletal models for each subject inside `dataset/183_athletes`:
+   - Run the retargeting algorithm to save skeletal models for each subject inside `dataset/183_athletes` (Note: This will take a couple of hours):
      ```
      python retarget_dataset.py
      ```
-   - To speed up the process, you can use multiple workers:
-     ```
-     python retarget_dataset.py --num_workers <num_workers>
-     ```
-     Replace `<num_workers>` with the number of workers you want to use.
 
 ## VQ-VAE Training
 Train the VQ-VAE model for motion representation:
