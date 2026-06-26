@@ -1,0 +1,15 @@
+# PVC for PG-BIG data (repo checkout, datasets, outputs, logs).
+#
+# Apply once per cluster:
+#   kubectl apply -f deploy/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pg-big
+spec:
+  storageClassName: rook-cephfs
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Gi

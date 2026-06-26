@@ -1,0 +1,41 @@
+# Apply: kubectl apply -k deploy/dev
+# Shell:  kubectl exec -it pg-big-dev -- bash -l
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pg-big-dev
+  labels:
+    app: pg-big-dev
+spec:
+  restartPolicy: Always
+  containers:
+  - name: pg-big-dev
+    image: pg-big:latest
+    imagePullPolicy: IfNotPresent
+    stdin: true
+    tty: true
+    workingDir: /mnt/PG-BIG
+    command: ["/bin/bash", "-c"]
+    args:
+    - |
+      grep -q pg-big /root/.bashrc 2>/dev/null || cat >> /root/.bashrc <<'EOF'
+      eval "$(conda shell.bash hook)"
+      conda activate pg-big
+      export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
+      export PYTHONPATH=/mnt/PG-BIG
+      EOF
+      exec sleep infinity
+    resources:
+      requests:
+        cpu: "16"
+        memory: 32Gi
+      limits:
+        cpu: "16"
+        memory: 32Gi
+    volumeMounts:
+    - name: data
+      mountPath: /mnt
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: pg-big
