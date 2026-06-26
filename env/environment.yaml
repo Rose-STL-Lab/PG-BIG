@@ -27,7 +27,7 @@ dependencies:
   - jupyter>=1.0
   - ipykernel>=6.25
   - notebook>=7.0
-  - casadi>=3.6
+  - chumpy>=0.70
   - pyyaml>=6.0
   - packaging>=23.0
   - tqdm>=4.66
@@ -41,7 +41,6 @@ dependencies:
       - nimblephysics
       - smplx
       - transformers
-      - chumpy
       - xgboost
       - moviepy
       - maskpass==0.3.6
