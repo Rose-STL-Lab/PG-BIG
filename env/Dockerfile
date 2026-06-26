@@ -8,7 +8,6 @@ ENV CONDA_DIR=/opt/conda
 ENV PATH=${CONDA_DIR}/bin:${PATH}
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
-    build-essential \
     ca-certificates \
     curl \
     git \
@@ -19,7 +18,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsm6 \
     libxext6 \
     libxrender1 \
-    linux-libc-dev \
     wget \
     liblapack3 \
     libblas3 \
@@ -37,9 +35,7 @@ WORKDIR /mnt
 COPY env/environment.yaml /mnt/environment.yaml
 
 # mamba (from Miniforge) is faster and uses less peak disk than conda during solves.
-# Pip deps (deepspeed, etc.) may upgrade numpy; restore 1.25.x for OpenSim.
 RUN mamba env create -f /mnt/environment.yaml && \
-    mamba install -n pg-big -y "numpy>=1.25,<1.26" --force-reinstall && \
     mamba clean --all --yes && \
     conda clean --all --yes && \
     rm -rf /opt/conda/pkgs/* /root/.cache/pip
@@ -47,11 +43,11 @@ RUN mamba env create -f /mnt/environment.yaml && \
 # Sanity-check core stack (fail the image build if anything is missing).
 RUN ${CONDA_DIR}/envs/pg-big/bin/python -c "\
 import numpy as np; \
-import scipy, sklearn, torch, torchvision, clip; \
+import scipy, sklearn, joblib, torch, torchvision, clip; \
 import nimblephysics as nimble; \
 import opensim; \
-import casadi; \
 import deepspeed; \
+import smplx; \
 assert np.__version__.startswith('1.25'), np.__version__; \
 assert hasattr(nimble, 'biomechanics'); \
 assert hasattr(opensim, 'Model'); \
