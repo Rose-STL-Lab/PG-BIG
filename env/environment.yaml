@@ -32,18 +32,14 @@ dependencies:
   - packaging>=23.0
   - tqdm>=4.66
   - pip
-  - pytorch>=2.2
-  - pytorch-cuda=12.4
-  - torchvision
-  - torchaudio
+  - pytorch::pytorch>=2.2
+  - pytorch::pytorch-cuda=12.4
+  - pytorch::torchvision
+  - pytorch::torchaudio
   - pip:
       - deepspeed
       - nimblephysics
       - smplx
       - transformers
       - xgboost
-      - moviepy
-      - maskpass==0.3.6
-      - python-decouple
-      - requests
       - clip @ git+https://github.com/openai/CLIP.git
