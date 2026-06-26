@@ -1,5 +1,5 @@
 # PG-BIG: VQ-VAE + surrogate + guidance + OpenSim/Nimble physics.
-# OpenSim 4.5.2 (py311np125) requires numpy 1.25.x.
+# OpenSim 4.5.2 (py311np125) requires numpy 1.25.x; PG-BIG stays on numpy 1.x (<2).
 #
 # Local setup:
 #   conda env create -f env/environment.yaml
@@ -31,6 +31,8 @@ dependencies:
   - pyyaml>=6.0
   - packaging>=23.0
   - tqdm>=4.66
+  - transformers>=4.40
+  - xgboost>=2.0
   - pip
   - pytorch::pytorch>=2.2
   - pytorch::pytorch-cuda=12.4
@@ -40,6 +42,4 @@ dependencies:
       - deepspeed
       - nimblephysics
       - smplx
-      - transformers
-      - xgboost
       - clip @ git+https://github.com/openai/CLIP.git

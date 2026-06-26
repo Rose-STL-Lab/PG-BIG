@@ -37,7 +37,9 @@ WORKDIR /mnt
 COPY env/environment.yaml /mnt/environment.yaml
 
 # mamba (from Miniforge) is faster and uses less peak disk than conda during solves.
+# Pip deps (deepspeed, etc.) may upgrade numpy; restore 1.25.x for OpenSim.
 RUN mamba env create -f /mnt/environment.yaml && \
+    mamba install -n pg-big -y "numpy>=1.25,<1.26" --force-reinstall && \
     mamba clean --all --yes && \
     conda clean --all --yes && \
     rm -rf /opt/conda/pkgs/* /root/.cache/pip
