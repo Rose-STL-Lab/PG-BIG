@@ -57,6 +57,7 @@ print('opensim', opensim.GetVersion())"
 
 ENV CONDA_DEFAULT_ENV=pg-big
 ENV PATH=${CONDA_DIR}/envs/pg-big/bin:${PATH}
+ENV LD_LIBRARY_PATH=${CONDA_DIR}/envs/pg-big/lib:${LD_LIBRARY_PATH}
 
 SHELL ["conda", "run", "-n", "pg-big", "/bin/bash", "-c"]
 
