@@ -48,8 +48,6 @@ import nimblephysics as nimble; \
 import opensim; \
 import deepspeed; \
 import smplx; \
-from vqvae.model import VQVAE_251; \
-from common.paths import repo_root; \
 assert np.__version__.startswith('1.25'), np.__version__; \
 assert hasattr(nimble, 'biomechanics'); \
 assert hasattr(opensim, 'Model'); \
