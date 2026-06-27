@@ -21,6 +21,7 @@ spec:
       grep -q pg-big /root/.bashrc 2>/dev/null || cat >> /root/.bashrc <<'EOF'
       eval "$(conda shell.bash hook)"
       conda activate pg-big
+      export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
       export PYTHONPATH=/mnt/PG-BIG
       EOF
       exec sleep infinity

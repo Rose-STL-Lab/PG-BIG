@@ -14,7 +14,6 @@ dependencies:
   - python=3.11
   - numpy>=1.25,<1.26
   - opensim=4.5.2
-  - ncurses>=6.5
   - libgfortran=3.0.0
   - scipy>=1.11
   - scikit-learn>=1.3
