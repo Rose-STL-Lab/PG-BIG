@@ -1,0 +1,73 @@
+# Worker phase: kubectl apply -k deploy/jobs/retarget-athletes/none
+# Full pipeline: ./deploy/scripts/run-retarget-athletes.sh none
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pg-big-retarget-none
+  labels:
+    app: pg-big-retarget-none
+    activation-method: none
+spec:
+  parallelism: 64
+  completions: 64
+  completionMode: Indexed
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: pg-big-retarget-none
+        activation-method: none
+    spec:
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 300
+      containers:
+      - name: pg-big-retarget-none
+        image: pg-big:latest
+        imagePullPolicy: IfNotPresent
+        workingDir: /mnt/PG-BIG
+        env:
+        - name: RETARGET_NUM_SHARDS
+          value: "64"
+        - name: ACTIVATION_METHOD
+          value: "none"
+        - name: OUTPUT_DIR
+          value: "/mnt/PG-BIG/datasets/183_athletes/retargeted"
+        - name: PG_BIG_RUN_LOG_ID
+          value: "RUN_LOG_ID_PLACEHOLDER"
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -eo pipefail
+          eval "$(conda shell.bash hook)"
+          conda activate pg-big
+          export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
+          export PYTHONPATH=/mnt/PG-BIG
+          DATASET=/mnt/PG-BIG/datasets/183_athletes
+          OUT="${OUTPUT_DIR:-${DATASET}/retargeted}"
+          NUM_SHARDS="${RETARGET_NUM_SHARDS:-64}"
+          ARGS=(
+            scripts/retarget_athletes.py
+            --dataset_path "${DATASET}"
+            --output_dir "${OUT}"
+            --num_shards "${NUM_SHARDS}"
+            --shard_index "${JOB_COMPLETION_INDEX}"
+            --num_workers 1
+            --activation_method "${ACTIVATION_METHOD:-none}"
+            --opensim_log_level Off
+          )
+          python "${ARGS[@]}"
+          test -f "${OUT}/retarget_manifest.$(printf '%04d' "${JOB_COMPLETION_INDEX}").jsonl"
+        resources:
+          limits:
+            memory: 2Gi
+            cpu: "1"
+          requests:
+            memory: 2Gi
+            cpu: "1"
+        volumeMounts:
+        - name: data
+          mountPath: /mnt
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: pg-big

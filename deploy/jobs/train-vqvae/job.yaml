@@ -1,0 +1,67 @@
+# Apply: kubectl apply -k deploy/jobs/train-vqvae
+# Or: ./deploy/scripts/run-train-vqvae.sh
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pg-big-train-vqvae
+  labels:
+    app: pg-big-train-vqvae
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: pg-big-train-vqvae
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: pg-big-train-vqvae
+        image: pg-big:latest
+        imagePullPolicy: IfNotPresent
+        workingDir: /mnt/PG-BIG
+        env:
+        - name: PG_BIG_RUN_LOG_ID
+          value: "RUN_LOG_ID_PLACEHOLDER"
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -eo pipefail
+          eval "$(conda shell.bash hook)"
+          conda activate pg-big
+          export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
+          export PYTHONPATH=/mnt/PG-BIG
+          export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+          export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
+          RETARGETED=/mnt/PG-BIG/datasets/183_athletes/retargeted
+          test -d "${RETARGETED}" || { echo "Missing retargeted data: ${RETARGETED}"; exit 1; }
+          NGPU=$(nvidia-smi -L 2>/dev/null | wc -l)
+          [ "${NGPU}" -lt 1 ] && { echo "No GPU visible"; exit 1; }
+          [ "${NGPU}" -gt 2 ] && NGPU=2
+          if [ "${NGPU}" -gt 1 ]; then
+            deepspeed --num_gpus="${NGPU}" scripts/train_vqvae.py \
+              --config configs/train_vqvae.json
+          else
+            python scripts/train_vqvae.py --config configs/train_vqvae.json
+          fi
+        resources:
+          limits:
+            nvidia.com/gpu: 2
+            memory: 64Gi
+            cpu: "16"
+          requests:
+            nvidia.com/gpu: 2
+            memory: 64Gi
+            cpu: "16"
+        volumeMounts:
+        - name: data
+          mountPath: /mnt
+        - name: dshm
+          mountPath: /dev/shm
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: pg-big
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 64Gi

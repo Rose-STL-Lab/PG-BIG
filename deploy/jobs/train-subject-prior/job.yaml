@@ -1,0 +1,69 @@
+# Apply: kubectl apply -k deploy/jobs/train-subject-prior
+# Requires: VQ-VAE + profile encoder checkpoints (see configs/train_subject_prior.json)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pg-big-train-subject-prior
+  labels:
+    app: pg-big-train-subject-prior
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: pg-big-train-subject-prior
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: pg-big-train-subject-prior
+        image: pg-big:latest
+        imagePullPolicy: IfNotPresent
+        workingDir: /mnt/PG-BIG
+        env:
+        - name: PG_BIG_RUN_LOG_ID
+          value: "RUN_LOG_ID_PLACEHOLDER"
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -eo pipefail
+          eval "$(conda shell.bash hook)"
+          conda activate pg-big
+          export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
+          export PYTHONPATH=/mnt/PG-BIG
+          export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+          export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
+          VQVAE_CKPT="${VQVAE_CHECKPOINT:-/mnt/PG-BIG/outputs/VQVAE/VQVAE/300000.pth}"
+          ENC_CKPT="${ENCODER_CHECKPOINT:-/mnt/PG-BIG/outputs/profile_encoder/profile_encoder_meta/profile_encoder.pth}"
+          test -f "${VQVAE_CKPT}" || { echo "Missing VQ-VAE checkpoint: ${VQVAE_CKPT}"; exit 1; }
+          test -f "${ENC_CKPT}" || { echo "Missing profile encoder checkpoint: ${ENC_CKPT}"; exit 1; }
+          test -d /mnt/PG-BIG/datasets/183_athletes/retargeted || { echo "Missing retargeted data"; exit 1; }
+          python scripts/train_subject_prior.py \
+            --dataset-path /mnt/PG-BIG/datasets/183_athletes/retargeted \
+            --vqvae-checkpoint "${VQVAE_CKPT}" \
+            --encoder-checkpoint "${ENC_CKPT}" \
+            --out-dir /mnt/PG-BIG/outputs/subject_prior/ \
+            --exp-name subject_prior \
+            --decoder-epochs 2500 \
+            --batch-size 256
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+            memory: 32Gi
+            cpu: "8"
+          requests:
+            nvidia.com/gpu: 1
+            memory: 32Gi
+            cpu: "8"
+        volumeMounts:
+        - name: data
+          mountPath: /mnt
+        - name: dshm
+          mountPath: /dev/shm
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: pg-big
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 16Gi

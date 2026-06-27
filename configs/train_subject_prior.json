@@ -1,0 +1,14 @@
+{
+  "dataset_path": "datasets/183_athletes/retargeted",
+  "vqvae_checkpoint": "./outputs/VQVAE/300000.pth",
+  "profile_encoder_checkpoint": "./outputs/profile_encoder/profile_encoder_meta/best_encoder.pth",
+  "exp_name": "subject_prior",
+  "out_dir": "outputs/subject_prior/",
+  "total_epochs": 2500,
+  "batch_size": 256,
+  "lr": 1e-4,
+  "profile_dim": 128,
+  "codebook_dim": 512,
+  "seq_len": 64,
+  "action_emb_dim": 64
+}

@@ -1,0 +1,12 @@
+{
+  "dataset_path": "datasets/183_athletes/retargeted",
+  "checkpoint_path": "./outputs/VQVAE/300000.pth",
+  "exp_name": "profile_encoder_meta",
+  "out_dir": "outputs/profile_encoder/",
+  "total_epochs": 2500,
+  "batch_size": 512,
+  "lr": 1e-5,
+  "biomech_dim": 2048,
+  "profile_dim": 128,
+  "latent_dim": 37
+}

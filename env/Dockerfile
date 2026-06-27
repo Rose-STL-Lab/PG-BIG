@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     liblapack3 \
     libblas3 \
+    libtinfo6 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN wget -qO /tmp/miniforge.sh \
@@ -40,6 +41,14 @@ RUN mamba env create -f /mnt/environment.yaml && \
     conda clean --all --yes && \
     rm -rf /opt/conda/pkgs/* /root/.cache/pip
 
+# Conda's libtinfo.so.6 lacks ELF symbol versions that /usr/bin/bash expects when
+# LD_LIBRARY_PATH points at the env lib dir. Use the system libtinfo instead.
+RUN TINFO=/lib/x86_64-linux-gnu/libtinfo.so.6 && \
+    if [ -f "${CONDA_DIR}/envs/pg-big/lib/libtinfo.so.6" ] && [ -e "${TINFO}" ]; then \
+      rm -f "${CONDA_DIR}/envs/pg-big/lib/libtinfo.so.6" && \
+      ln -s "${TINFO}" "${CONDA_DIR}/envs/pg-big/lib/libtinfo.so.6"; \
+    fi
+
 # Sanity-check core stack (fail the image build if anything is missing).
 RUN ${CONDA_DIR}/envs/pg-big/bin/python -c "\
 import numpy as np; \
@@ -48,6 +57,8 @@ import nimblephysics as nimble; \
 import opensim; \
 import deepspeed; \
 import smplx; \
+from vqvae.model import VQVAE_251; \
+from common.paths import repo_root; \
 assert np.__version__.startswith('1.25'), np.__version__; \
 assert hasattr(nimble, 'biomechanics'); \
 assert hasattr(opensim, 'Model'); \

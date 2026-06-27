@@ -1,3 +1,8 @@
 __pycache__
 baseline
 outputs
+results/
+logs/
+*.pt
+datasets/*
+!datasets/*.py

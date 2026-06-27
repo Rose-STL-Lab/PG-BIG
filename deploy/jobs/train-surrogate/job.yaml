@@ -1,0 +1,51 @@
+# Apply: kubectl apply -k deploy/jobs/train-surrogate
+# Requires: retargeted .b3d data
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pg-big-train-surrogate
+  labels:
+    app: pg-big-train-surrogate
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: pg-big-train-surrogate
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: pg-big-train-surrogate
+        image: pg-big:latest
+        imagePullPolicy: IfNotPresent
+        workingDir: /mnt/PG-BIG
+        env:
+        - name: PG_BIG_RUN_LOG_ID
+          value: "RUN_LOG_ID_PLACEHOLDER"
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -eo pipefail
+          eval "$(conda shell.bash hook)"
+          conda activate pg-big
+          export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
+          export PYTHONPATH=/mnt/PG-BIG
+          export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
+          test -d /mnt/PG-BIG/datasets/183_athletes/retargeted || { echo "Missing retargeted data"; exit 1; }
+          python scripts/train_surrogate.py
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+            memory: 16Gi
+            cpu: "4"
+          requests:
+            nvidia.com/gpu: 1
+            memory: 16Gi
+            cpu: "4"
+        volumeMounts:
+        - name: data
+          mountPath: /mnt
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: pg-big

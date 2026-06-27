@@ -1,102 +1,113 @@
 # PG-BIG: Personalize Guidance for Biomechanically Informed GenAI
 
-## Summary
-PG-BIG is a framework for personalized guidance in biomechanically informed generative AI, focusing on motion modeling and evaluation using VQ-VAE and surrogate models.
+PG-BIG is a framework for personalized guidance in biomechanically informed generative AI, focusing on motion modeling using VQ-VAE, profile encoders, subject priors, and surrogate muscle models.
 
-## Table of Contents
-- [Summary](#summary)
-- [Installation](#installation)
-- [VQ-VAE Training](#vq-vae-training)
-- [Profile Prior Training](#profile-prior-training)
-- [Surrogate Training](#surrogate-training)
-- [Guidance](#guidance)
-- [Evaluation Metrics](#evaluation-metrics)
+## Setup
 
-## Dependencies
-1. Clone the repository:
-    ```
-    git clone https://github.com/your-org/PG-BIG.git
-    cd PG-BIG
-    ```
-2. Install dependencies using Conda or pip:
-    ```
-    pip install -r requirements.txt
-    ```
-    ```
-    conda create env -f enviornment.yaml
-    ```
-## Datasets
-You can download/create the datasets following the instructions below.
-### Three-Dimensional Motion Capture Data of a Movement Screen from 183 Athletes
-1. Navigate to `dataset` and create a new directory called `three_dimensional_motion_capture`:
-    ```
-    cd dataset
-    mkdir -p three_dimensional_motion_capture
-    ```
-2. Go to the [Figshare collection page](https://springernature.figshare.com/collections/Three-Dimensional_Motion_Capture_Data_of_a_Movement_Screen_from_183_Athletes/6014509).
-
-   Download both:
-   - [Three-Dimensional Motion Capture Data of All Athletes](https://springernature.figshare.com/articles/dataset/Three-Dimensional_Motion_Capture_Data_of_All_Athletes/19879894?backTo=%2Fcollections%2FThree-Dimensional_Motion_Capture_Data_of_a_Movement_Screen_from_183_Athletes%2F6014509&file=39075392)
-   - [Participants' Information and Sampling Frequency](https://springernature.figshare.com/articles/dataset/Participants_information_and_sampling_frequency/19879891?backTo=/collections/Three-Dimensional_Motion_Capture_Data_of_a_Movement_Screen_from_183_Athletes/6014509)
-
-   Place both zip files inside the `three_dimensional_motion_capture` directory. Then unzip both files:
-    ```
-    unzip Kinematic_Data.zip -d Kinematic_Data
-    unzip Participants\ Info.zip -d Participants\ Info
-    ```
-3. Fit the dataset markers to a Rajapoal Skeleton:
-
-   - Download the [Rajapoal OpenSim Model](https://simtk.org/frs/?group_id=773) by opening the link in your browser.
-     ```
-     "$BROWSER" https://simtk.org/frs/?group_id=773
-     ```
-   - Place the downloaded zip file (`FullBodyModel-4.0.zip`) into the `dataset` directory.
-   - Unzip the model:
-     ```
-     unzip FullBodyModel-4.0.zip -d FullBodyModel-4.0
-     ```
-   - Run the retargeting algorithm to save skeletal models for each subject inside `dataset/183_athletes` (Note: This will take a couple of hours):
-     ```
-     python retarget_dataset.py
-     ```
-
-## VQ-VAE Training
-Train the VQ-VAE model for motion representation:
+```bash
+git clone https://github.com/your-org/PG-BIG.git
+cd PG-BIG
+conda env create -f env/environment.yaml
+conda activate pg-big
 ```
-python3 train_vq.py --batch-size 256 --lr 2e-4 --total-iter 300000 --lr-scheduler 200000 --nb-code 512 --down-t 2 --depth 3 --dilation-growth-rate 3 --out-dir output --dataname mcs --vq-act relu --quantizer ema_reset --loss-vel 0.5 --recons-loss l1_smooth --exp-name 183_athletes
+
+Run all commands from the **repository root** with `PYTHONPATH=.` (scripts add the repo root automatically).
+
+## Data layout
+
+Place the 183-athletes Figshare data under `datasets/183_athletes/`:
+
 ```
-If you have 2+ CUDA GPUs, you can utilize DeepSpeed for faster training. Fill in `num_gpus` based on the number of GPUs you'll be using for training:
+datasets/183_athletes/
+├── Kinematic_Data/          # Raw C3D per subject
+├── Participants Info/       # Subject metadata spreadsheets
+└── retargeted/              # Output: one {subject_id}.b3d per athlete
 ```
-deepspeed --num_gpus=<num_gpus> train_vqvae.py --batch-size 256 --window-size 512 --lr 2e-4 --total-iter 300000 --lr-scheduler 200000 --nb-code 512 --down-t 2 --depth 3 --dilation-growth-rate 3 --out-dir output --dataname 183_athletes --vq-act relu --quantizer ema_reset --loss-vel 0.5 --recons-loss l1_smooth --exp-name VQVAE
+
+Override the data root with the `ATHLETES_DATA_ROOT` environment variable if needed.
+
+## Pipeline
+
+### 1. Retarget C3D markers to Rajagopal skeleton
+
+```bash
+python scripts/retarget_athletes.py
 ```
+
+### 2. Train VQ-VAE
+
+```bash
+python scripts/train_vqvae.py --config configs/train_vqvae.json
+```
+
+With DeepSpeed (2+ GPUs):
+
+```bash
+deepspeed --num_gpus=<N> scripts/train_vqvae.py --config configs/train_vqvae.json
+```
+
 Supported datasets: `183_athletes`, `addbiomechanics`.
 
-## Profile Prior Training
-Train the profile prior model for personalized guidance:
-```
-python train_profile_prior.py 
+### 3. Train profile encoder
+
+```bash
+python scripts/train_profile_encoder.py --config configs/train_profile_encoder.json
 ```
 
-## Surrogate Training
-Train surrogate models for biomechanical evaluation:
-```
-python train_surrogate.py --dataname <dataset>
+### 4. Train subject prior
+
+```bash
+python scripts/train_subject_prior.py --config configs/train_subject_prior.json
 ```
 
-## Guidance
-Use the guidance module to generate or refine motions based on personalized profiles:
-```
-python guidance.py --input <motion_file> --profile <profile_file>
+### 5. Train surrogate model
+
+```bash
+python scripts/train_surrogate.py --config configs/train_surrogate.json
 ```
 
-## Evaluation Metrics
-Evaluate generated motions using built-in metrics:
-- Reconstruction Loss
-- Perplexity
-- Commitment Loss
-- Temporal Consistency
+### 6. Generate motion
 
-Run evaluation:
+```bash
+python scripts/generate_motion.py --help
 ```
-python evaluate.py --model <model_checkpoint> --dataset <dataset>
+
+### 7. Visualize motion
+
+```bash
+python scripts/visualize_motion.py --b3d-path datasets/183_athletes/retargeted/927.b3d
+```
+
+## Project layout
+
+| Path | Role |
+|------|------|
+| `scripts/` | CLI entry points (thin wrappers) |
+| `common/` | Paths, logging, runtime, motion math |
+| `datasets/` | PyTorch dataset loaders + on-disk data |
+| `nimble/` | Nimblephysics retargeting and visualization |
+| `vqvae/` | VQ-VAE model and training |
+| `profile/` | Profile encoder and subject prior |
+| `surrogate/` | Muscle activation surrogate |
+| `eval/` | Motion-text evaluation (SMPL-based) |
+| `configs/` | JSON training defaults |
+| `visualization/` | 3D skeleton plotting |
+| `env/` | Conda environment and Docker image |
+| `deploy/` | Kubernetes manifests |
+
+## Migration note
+
+On-disk data moved from `dataset/183_athletes/` to `datasets/183_athletes/`. Update any external references accordingly.
+
+## Kubernetes
+
+See [deploy/README.md](deploy/README.md) for the full pipeline:
+
+```bash
+./deploy/scripts/run-retarget-athletes.sh none
+./deploy/scripts/run-train-vqvae.sh
+./deploy/scripts/run-train-profile-encoder.sh
+./deploy/scripts/run-train-subject-prior.sh
+./deploy/scripts/run-train-surrogate.sh
+./deploy/scripts/run-generate-motion.sh
 ```
