@@ -13,6 +13,9 @@ channels:
 dependencies:
   - python=3.11
   - numpy>=1.25,<1.26
+  # libffi 3.4+ (LIBFFI_BASE_7.0). Dockerfile drops libffi.so.7 aliases so system
+  # git/curl keep using Ubuntu libffi.so.7 while Python uses conda libffi.so.8.
+  - libffi>=3.4.2,<4
   - opensim=4.5.2
   - libgfortran=3.0.0
   - scipy>=1.11

@@ -40,6 +40,11 @@ RUN mamba env create -f /mnt/environment.yaml && \
     conda clean --all --yes && \
     rm -rf /opt/conda/pkgs/* /root/.cache/pip
 
+# Conda links libffi.so.7 -> libffi.so.8; with LD_LIBRARY_PATH pointing at the env,
+# system tools (git-remote-https, curl) load that alias and break against libp11-kit.
+# Drop the .so.7 names so those tools fall back to the system libffi.so.7.
+RUN rm -f ${CONDA_DIR}/envs/pg-big/lib/libffi.so.7 ${CONDA_DIR}/envs/pg-big/lib/libffi.7.so
+
 # Sanity-check core stack (fail the image build if anything is missing).
 RUN ${CONDA_DIR}/envs/pg-big/bin/python -c "\
 import numpy as np; \
@@ -54,6 +59,10 @@ assert hasattr(opensim, 'Model'); \
 print('numpy', np.__version__); \
 print('torch', torch.__version__, 'cuda', torch.cuda.is_available()); \
 print('opensim', opensim.GetVersion())"
+
+# git must work after conda activate (regression guard for libffi / LD_LIBRARY_PATH).
+RUN /bin/bash -lc 'eval "$(conda shell.bash hook)" && conda activate pg-big && \
+    /usr/lib/git-core/git-remote-https 2>&1 | grep -q "remote-curl: usage"'
 
 ENV CONDA_DEFAULT_ENV=pg-big
 ENV PATH=${CONDA_DIR}/envs/pg-big/bin:${PATH}
