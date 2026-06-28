@@ -17,7 +17,7 @@ deploy/
   components/
     cluster-config/            # image + PVC (all jobs + dev pod)
   jobs/
-    retarget-athletes/         # 64-way indexed (none | static-optimization | moco-track)
+    retarget-athletes/         # 90-way indexed (none | static-optimization | moco-track)
     train-vqvae/
     train-profile-encoder/
     train-subject-prior/
@@ -37,7 +37,7 @@ deploy/
 | 5. Surrogate | `python scripts/train_surrogate.py` | `./deploy/scripts/run-train-surrogate.sh` |
 | 6. Generate motion | `python scripts/generate_motion.py` | `./deploy/scripts/run-generate-motion.sh` |
 
-Retarget also supports `static-optimization` and `moco-track` activation methods (separate output directories).
+Retarget also supports `static-optimization` and `moco-track` activation methods (all write to `nimble_b3d/`).
 
 **Not on Kubernetes:** `run_guidance.py` (WIP), `visualize_motion.py`, `render_frames_poly.py`, `retarget_baselines.py` — use the dev pod or local runs.
 
@@ -97,7 +97,7 @@ kubectl kustomize deploy/jobs/train-vqvae
 
 | Job | GPUs | CPU | Memory | Notes |
 |-----|------|-----|--------|-------|
-| retarget-athletes/* (×64 pods) | — | 1 each | 2Gi each | Indexed Job |
+| retarget-athletes/* (×90 pods) | — | 1 each | 2Gi each | Indexed Job |
 | train-vqvae | 2 | 16 | 64Gi | DeepSpeed if 2+ GPUs visible |
 | train-profile-encoder | 1 | 8 | 32Gi | Needs VQ-VAE checkpoint |
 | train-subject-prior | 1 | 8 | 32Gi | Needs VQ-VAE + encoder checkpoints |
@@ -120,13 +120,13 @@ Override via env vars on the Job manifest (`VQVAE_CHECKPOINT`, `ENCODER_CHECKPOI
 
 ## Retarget worker details
 
-Each variant uses an **Indexed Job** with **64 pods** (one CPU, 2Gi memory each):
+Each variant uses an **Indexed Job** with **90 pods** (one CPU, 2Gi memory each):
 
 | Method | Job name | Output directory |
 |--------|----------|------------------|
-| `none` | `pg-big-retarget-none` | `datasets/183_athletes/retargeted/` |
-| `static_optimization` | `pg-big-retarget-static-optimization` | `datasets/183_athletes/retargeted_static_optimization/` |
-| `moco_track` | `pg-big-retarget-moco-track` | `datasets/183_athletes/retargeted_moco_track/` |
+| `none` | `pg-big-retarget-none` | `datasets/183_athletes/nimble_b3d/` |
+| `static_optimization` | `pg-big-retarget-static-optimization` | `datasets/183_athletes/nimble_b3d/` |
+| `moco_track` | `pg-big-retarget-moco-track` | `datasets/183_athletes/nimble_b3d/` |
 
 Shards use `JOB_COMPLETION_INDEX`. Each pod writes `retarget_manifest.NNNN.jsonl` when complete.
 

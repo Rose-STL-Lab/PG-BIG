@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Run distributed 183-athletes retargeting on Kubernetes (64 indexed worker pods).
+# Run distributed 183-athletes retargeting on Kubernetes (90 indexed worker pods).
 #
 # Usage:
 #   ./deploy/scripts/run-retarget-athletes.sh [none|static-optimization|moco-track]
 #   ACTIVATION_METHOD=static_optimization ./deploy/scripts/run-retarget-athletes.sh
 #
 # Environment overrides:
-#   RETARGET_NUM_SHARDS   shard count (default: 64)
+#   RETARGET_NUM_SHARDS   shard count (default: 90)
 #   WORKER_TIMEOUT        kubectl wait timeout (default: 48h)
 #   KUSTOMIZE_DIR         override worker job kustomization path
 #   SKIP_DELETE           set to 1 to skip deleting stale jobs before apply
@@ -48,7 +48,7 @@ resolve_method "${METHOD_ARG}"
 
 KUSTOMIZE_DIR="${KUSTOMIZE_DIR:-${JOBS_ROOT}/${METHOD_FOLDER}}"
 WORKER_TIMEOUT="${WORKER_TIMEOUT:-48h}"
-export RETARGET_NUM_SHARDS="${RETARGET_NUM_SHARDS:-64}"
+export RETARGET_NUM_SHARDS="${RETARGET_NUM_SHARDS:-90}"
 RUN_LOG_ID="${RUN_LOG_ID:-retarget_${METHOD_FOLDER}_$(date -u +%Y%m%dT%H%M%SZ)}"
 export RUN_LOG_ID
 

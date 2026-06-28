@@ -5,7 +5,7 @@ Layout (default)::
     <repo>/datasets/183_athletes/
         Kinematic_Data/
         Participants Info/
-        retargeted/          # per-subject .b3d files
+        nimble_b3d/          # per-subject .b3d files
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 
 ATHLETES_183_SUBDIR = "183_athletes"
-RETARGETED_SUBDIR = "retargeted"
+RETARGETED_SUBDIR = "nimble_b3d"
 
 __all__ = [
     "ATHLETES_183_DIR",

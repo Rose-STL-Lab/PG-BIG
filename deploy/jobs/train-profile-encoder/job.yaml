@@ -34,9 +34,9 @@ spec:
           export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
           VQVAE_CKPT="${VQVAE_CHECKPOINT:-/mnt/PG-BIG/outputs/VQVAE/VQVAE/300000.pth}"
           test -f "${VQVAE_CKPT}" || { echo "Missing VQ-VAE checkpoint: ${VQVAE_CKPT}"; exit 1; }
-          test -d /mnt/PG-BIG/datasets/183_athletes/retargeted || { echo "Missing retargeted data"; exit 1; }
+          test -d /mnt/PG-BIG/datasets/183_athletes/nimble_b3d || { echo "Missing nimble_b3d data"; exit 1; }
           python scripts/train_profile_encoder.py \
-            --dataset-path /mnt/PG-BIG/datasets/183_athletes/retargeted \
+            --dataset-path /mnt/PG-BIG/datasets/183_athletes/nimble_b3d \
             --checkpoint-path "${VQVAE_CKPT}" \
             --out-dir /mnt/PG-BIG/outputs/profile_encoder/ \
             --exp-name profile_encoder_meta \

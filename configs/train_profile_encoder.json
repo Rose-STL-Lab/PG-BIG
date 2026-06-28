@@ -1,5 +1,5 @@
 {
-  "dataset_path": "datasets/183_athletes/retargeted",
+  "dataset_path": "datasets/183_athletes/nimble_b3d",
   "checkpoint_path": "./outputs/VQVAE/300000.pth",
   "exp_name": "profile_encoder_meta",
   "out_dir": "outputs/profile_encoder/",

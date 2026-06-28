@@ -36,9 +36,9 @@ spec:
           ENC_CKPT="${ENCODER_CHECKPOINT:-/mnt/PG-BIG/outputs/profile_encoder/profile_encoder_meta/profile_encoder.pth}"
           test -f "${VQVAE_CKPT}" || { echo "Missing VQ-VAE checkpoint: ${VQVAE_CKPT}"; exit 1; }
           test -f "${ENC_CKPT}" || { echo "Missing profile encoder checkpoint: ${ENC_CKPT}"; exit 1; }
-          test -d /mnt/PG-BIG/datasets/183_athletes/retargeted || { echo "Missing retargeted data"; exit 1; }
+          test -d /mnt/PG-BIG/datasets/183_athletes/nimble_b3d || { echo "Missing nimble_b3d data"; exit 1; }
           python scripts/train_subject_prior.py \
-            --dataset-path /mnt/PG-BIG/datasets/183_athletes/retargeted \
+            --dataset-path /mnt/PG-BIG/datasets/183_athletes/nimble_b3d \
             --vqvae-checkpoint "${VQVAE_CKPT}" \
             --encoder-checkpoint "${ENC_CKPT}" \
             --out-dir /mnt/PG-BIG/outputs/subject_prior/ \

@@ -8,8 +8,8 @@ metadata:
     app: pg-big-retarget-moco-track
     activation-method: moco-track
 spec:
-  parallelism: 64
-  completions: 64
+  parallelism: 90
+  completions: 90
   completionMode: Indexed
   backoffLimit: 0
   template:
@@ -27,11 +27,13 @@ spec:
         workingDir: /mnt/PG-BIG
         env:
         - name: RETARGET_NUM_SHARDS
-          value: "64"
+          value: "90"
         - name: ACTIVATION_METHOD
           value: "moco_track"
         - name: OUTPUT_DIR
-          value: "/mnt/PG-BIG/datasets/183_athletes/retargeted_moco_track"
+          value: "/mnt/PG-BIG/datasets/183_athletes/nimble_b3d"
+        - name: SKIP_EXISTING
+          value: "0"
         - name: PG_BIG_RUN_LOG_ID
           value: "RUN_LOG_ID_PLACEHOLDER"
         command: ["/bin/bash", "-c"]
@@ -43,8 +45,8 @@ spec:
           export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
           export PYTHONPATH=/mnt/PG-BIG
           DATASET=/mnt/PG-BIG/datasets/183_athletes
-          OUT="${OUTPUT_DIR:-${DATASET}/retargeted_moco_track}"
-          NUM_SHARDS="${RETARGET_NUM_SHARDS:-64}"
+          OUT="${OUTPUT_DIR:-${DATASET}/nimble_b3d}"
+          NUM_SHARDS="${RETARGET_NUM_SHARDS:-90}"
           ARGS=(
             scripts/retarget_athletes.py
             --dataset_path "${DATASET}"
@@ -55,6 +57,7 @@ spec:
             --activation_method "${ACTIVATION_METHOD:-moco_track}"
             --opensim_log_level Off
           )
+          [ "${SKIP_EXISTING:-0}" = "1" ] && ARGS+=(--skip_existing)
           python "${ARGS[@]}"
           test -f "${OUT}/retarget_manifest.$(printf '%04d' "${JOB_COMPLETION_INDEX}").jsonl"
         resources:

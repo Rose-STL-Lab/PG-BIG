@@ -32,8 +32,8 @@ spec:
           export PYTHONPATH=/mnt/PG-BIG
           export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
           export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
-          RETARGETED=/mnt/PG-BIG/datasets/183_athletes/retargeted
-          test -d "${RETARGETED}" || { echo "Missing retargeted data: ${RETARGETED}"; exit 1; }
+          RETARGETED=/mnt/PG-BIG/datasets/183_athletes/nimble_b3d
+          test -d "${RETARGETED}" || { echo "Missing nimble_b3d data: ${RETARGETED}"; exit 1; }
           NGPU=$(nvidia-smi -L 2>/dev/null | wc -l)
           [ "${NGPU}" -lt 1 ] && { echo "No GPU visible"; exit 1; }
           [ "${NGPU}" -gt 2 ] && NGPU=2
